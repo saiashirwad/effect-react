@@ -27,11 +27,9 @@ function useRxQuery<
 		Effect.Effect<TQueryFnData, TError, never>,
 		TInput
 	>,
-	options?: Partial<
-		Exclude<
-			UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
-			"queryFn" | "queryKey"
-		>
+	options?: Exclude<
+		UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
+		"queryFn" | "queryKey"
 	>,
 ): UseQueryResult<TData, TError> {
 	const queryFn = useRxValue(queryFnEffect)
@@ -49,11 +47,9 @@ function useEffectMutation<
 	TContext = unknown,
 >(
 	mutationFnEffect: (vars: TVariables) => Effect.Effect<TData, TError>,
-	options?: Partial<
-		Exclude<
-			UseMutationOptions<TData, TError, TVariables, TContext>,
-			"mutationFn"
-		>
+	options?: Exclude<
+		UseMutationOptions<TData, TError, TVariables, TContext>,
+		"mutationFn"
 	>,
 ) {
 	return useMutation({
