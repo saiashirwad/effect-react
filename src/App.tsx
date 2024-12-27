@@ -1,7 +1,9 @@
 import { Rx, useRx, useRxValue } from "@effect-rx/rx-react"
 import {
+	QueryKey,
 	UseMutationOptions,
 	UseQueryOptions,
+	UseQueryResult,
 	useMutation,
 	useQuery,
 } from "@tanstack/react-query"
@@ -34,16 +36,29 @@ const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
 
 const capsMon$ = Rx.map(pokemonName$, (pn) => pn.toUpperCase())
 
-type UseRxQuery<T, E> = Exclude<UseQueryOptions<T, E>, "queryFn"> & {
-	queryFn$: Rx.Writable<Effect.Effect<T, E, never>, string>
+type UseRxQueryOptions<
+	TQueryFnData,
+	TError,
+	TData,
+	TQueryKey extends QueryKey,
+> = Exclude<
+	UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
+	"queryFn" | "queryKey"
+> & {
+	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>
 }
 
-function useRxQuery<T, E>({ queryFn$, ...rest }: UseRxQuery<T, E>) {
+function useRxQuery<TQueryFnData, TError, TData, TQueryKey extends QueryKey>(
+	queryKey: TQueryKey,
+	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>,
+	options?: Partial<UseRxQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
+): UseQueryResult<TQueryFnData, TError> {
 	const queryFn = useRxValue(queryFn$)
 	return useQuery({
 		queryFn: () => Effect.runPromise(queryFn),
-		...rest,
-	})
+		...options,
+		queryKey,
+	}) as any
 }
 
 type UseEffectMutation<T, E, V, C> = Exclude<
@@ -53,49 +68,34 @@ type UseEffectMutation<T, E, V, C> = Exclude<
 	mutationFn$: (vars: V) => Effect.Effect<T, E>
 }
 
-function useEffectMutation<T, E, V, C>({
-	mutationFn$,
-	...rest
-}: UseEffectMutation<T, E, V, C>) {
+function useEffectMutation<T, E, V, C>(
+	mutationFn$: (vars: V) => Effect.Effect<T, E>,
+	options?: Partial<UseEffectMutation<T, E, V, C>>,
+) {
 	return useMutation({
 		mutationFn: (v) => {
 			return Effect.runPromise(mutationFn$(v))
 		},
-		...rest,
+		...options,
 	})
 }
 
 export default function App() {
 	const [pokemonName, setPokemonName] = useRx(pokemonName$)
 	const nameDebounced = useRxValue(pokemonNameDebounced$)
-	const pokemon = useRxQuery({
-		queryKey: ["pokemon", nameDebounced],
-		queryFn$: pokemon$,
-	})
+	const pokemon = useRxQuery(["pokemon", nameDebounced], pokemon$)
 
 	const pokemonCaps = useRxValue(capsMon$)
 
-	const getPokemonName = useEffectMutation({
-		mutationFn$: (name: string) =>
-			Effect.gen(function* () {
-				console.log("getting pokemon")
-				yield* Effect.sleep("1 second")
-				const pokemon = yield* getPokemon(name)
-				console.log("got pokemon")
-				return pokemon.name
-			}),
-		onSuccess: (data) => {
-			console.log(data)
-		},
-		onError: (e, v, c) => {
-			console.log(e)
-		},
-		onMutate: (a) => {
-			return {
-				hi: "there" as const,
-			}
-		},
-	})
+	const getPokemonName = useEffectMutation((name: string) =>
+		Effect.gen(function* () {
+			console.log("getting pokemon")
+			yield* Effect.sleep("1 second")
+			const pokemon = yield* getPokemon(name)
+			console.log("got pokemon")
+			return pokemon.name
+		}),
+	)
 
 	return (
 		<div className="container mx-auto p-4 font-mono">
