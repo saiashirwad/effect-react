@@ -68,13 +68,6 @@ class Pokemon extends S.Class<Pokemon>("Pokemon")({
 	abilities: S.Array(S.Struct({ ability: S.Struct({ name: S.String }) })),
 }) {}
 
-const getPokemon = (name: string) =>
-	pipe(
-		Effect.promise(() => fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)),
-		Effect.andThen((response) => response.json()),
-		Effect.andThen(S.decodeUnknown(Pokemon)),
-	)
-
 const pokemonName$ = Rx.make("pikachu")
 
 const registry = Registry.make()
@@ -93,7 +86,13 @@ const pokemonNameDebounced$ = pokemonName$.pipe(
 	Rx.debounce(Duration.seconds(1)),
 )
 
-const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
+const pokemon$ = Rx.map(pokemonNameDebounced$, (name: string) =>
+	pipe(
+		Effect.promise(() => fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)),
+		Effect.andThen((response) => response.json()),
+		Effect.andThen(S.decodeUnknown(Pokemon)),
+	),
+)
 
 const nameAndAbilities$ = Rx.map(pokemon$, (pokemon) =>
 	Effect.gen(function* () {
@@ -124,8 +123,7 @@ function Playground() {
 	const getPokemonName = useEffectMutation((name: string) =>
 		Effect.gen(function* () {
 			yield* Effect.sleep("1 second")
-			const pokemon = yield* getPokemon(name)
-			return pokemon.name
+			return { name }
 		}),
 	)
 
