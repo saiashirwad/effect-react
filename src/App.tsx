@@ -15,16 +15,6 @@ import {
 } from "@tanstack/react-query"
 import { Duration, Effect, Schema as S, pipe } from "effect"
 
-type UseRxQueryOptions<
-	TQueryFnData,
-	TError,
-	TData,
-	TQueryKey extends QueryKey,
-> = Exclude<
-	UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
-	"queryFn" | "queryKey"
->
-
 function useRxQuery<
 	TQueryFnData,
 	TError,
@@ -37,7 +27,12 @@ function useRxQuery<
 		Effect.Effect<TQueryFnData, TError, never>,
 		TInput
 	>,
-	options?: Partial<UseRxQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
+	options?: Partial<
+		Exclude<
+			UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
+			"queryFn" | "queryKey"
+		>
+	>,
 ): UseQueryResult<TData, TError> {
 	const queryFn = useRxValue(queryFnEffect)
 	return useQuery({
@@ -47,16 +42,6 @@ function useRxQuery<
 	})
 }
 
-type UseEffectMutation<
-	TData = unknown,
-	TError = Error,
-	TVariables = void,
-	TContext = unknown,
-> = Exclude<
-	UseMutationOptions<TData, TError, TVariables, TContext>,
-	"mutationFn"
->
-
 function useEffectMutation<
 	TData = unknown,
 	TError = Error,
@@ -64,7 +49,12 @@ function useEffectMutation<
 	TContext = unknown,
 >(
 	mutationFnEffect: (vars: TVariables) => Effect.Effect<TData, TError>,
-	options?: Partial<UseEffectMutation<TData, TError, TVariables, TContext>>,
+	options?: Partial<
+		Exclude<
+			UseMutationOptions<TData, TError, TVariables, TContext>,
+			"mutationFn"
+		>
+	>,
 ) {
 	return useMutation({
 		mutationFn: (v) => {
