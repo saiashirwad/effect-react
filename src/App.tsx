@@ -142,7 +142,7 @@ function Playground() {
 	)
 
 	return (
-		<div className="container mx-auto p-4 font-mono">
+		<div>
 			<pre>{JSON.stringify(rip, null, 2)}</pre>
 			<div>
 				<pre>
