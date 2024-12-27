@@ -30,9 +30,10 @@ function useRxQuery<
 	TError,
 	TData = TQueryFnData,
 	TQueryKey extends QueryKey = QueryKey,
+	TInput = unknown,
 >(
 	queryKey: TQueryKey,
-	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>,
+	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, TInput>,
 	options?: Partial<UseRxQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
 ): UseQueryResult<TData, TError> {
 	const queryFn = useRxValue(queryFn$)
