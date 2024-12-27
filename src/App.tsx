@@ -50,6 +50,15 @@ const pokemonNameDebounced$ = pokemonName$.pipe(
 )
 
 const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
+const nameAndAbilities$ = Rx.map(pokemon$, (pokemon) =>
+	Effect.gen(function* () {
+		const poke = yield* pokemon
+		return {
+			name: poke.name,
+			abilities: poke.abilities,
+		}
+	}),
+)
 
 const capsMon$ = Rx.map(pokemonName$, (pn) => pn.toUpperCase())
 
@@ -61,9 +70,7 @@ type UseRxQueryOptions<
 > = Exclude<
 	UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
 	"queryFn" | "queryKey"
-> & {
-	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>
-}
+>
 
 function useRxQuery<
 	TQueryFnData,
@@ -91,9 +98,7 @@ type UseEffectMutation<
 > = Exclude<
 	UseMutationOptions<TData, TError, TVariables, TContext>,
 	"mutationFn"
-> & {
-	mutationFn$: (vars: TVariables) => Effect.Effect<TData, TError, TContext>
-}
+>
 
 function useEffectMutation<
 	TData = unknown,
@@ -116,6 +121,10 @@ function Playground() {
 	const [pokemonName, setPokemonName] = useRx(pokemonName$)
 	const nameDebounced = useRxValue(pokemonNameDebounced$)
 	const pokemon = useRxQuery(["pokemon", nameDebounced], pokemon$)
+	const nameAndAbilities = useRxQuery(
+		["nameAndAbilities", nameDebounced],
+		nameAndAbilities$,
+	)
 
 	const rip = useRxValue(rip$)
 
@@ -153,6 +162,8 @@ function Playground() {
 			</button>
 			<pre>{JSON.stringify(pokemon.data, null, 2)}</pre>
 			<pre>{JSON.stringify(pokemon.error, null, 2)}</pre>
+			<pre>{JSON.stringify(nameAndAbilities.data, null, 2)}</pre>
+			<pre>{JSON.stringify(nameAndAbilities.error, null, 2)}</pre>
 		</div>
 	)
 }
