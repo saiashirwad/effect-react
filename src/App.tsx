@@ -14,6 +14,7 @@ import {
 	useQuery,
 } from "@tanstack/react-query"
 import { Duration, Effect, Schema as S, pipe } from "effect"
+import React from "react"
 
 class Pokemon extends S.Class<Pokemon>("Pokemon")({
 	id: S.Number,
