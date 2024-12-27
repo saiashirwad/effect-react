@@ -33,10 +33,13 @@ function useRxQuery<
 	TInput = unknown,
 >(
 	queryKey: TQueryKey,
-	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, TInput>,
+	queryFnEffect: Rx.Writable<
+		Effect.Effect<TQueryFnData, TError, never>,
+		TInput
+	>,
 	options?: Partial<UseRxQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
 ): UseQueryResult<TData, TError> {
-	const queryFn = useRxValue(queryFn$)
+	const queryFn = useRxValue(queryFnEffect)
 	return useQuery({
 		queryFn: () => Effect.runPromise(queryFn),
 		...options,
@@ -60,12 +63,12 @@ function useEffectMutation<
 	TVariables = void,
 	TContext = unknown,
 >(
-	mutationFn$: (vars: TVariables) => Effect.Effect<TData, TError>,
+	mutationFnEffect: (vars: TVariables) => Effect.Effect<TData, TError>,
 	options?: Partial<UseEffectMutation<TData, TError, TVariables, TContext>>,
 ) {
 	return useMutation({
 		mutationFn: (v) => {
-			return Effect.runPromise(mutationFn$(v))
+			return Effect.runPromise(mutationFnEffect(v))
 		},
 		...options,
 	})
