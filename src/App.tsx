@@ -48,29 +48,44 @@ type UseRxQueryOptions<
 	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>
 }
 
-function useRxQuery<TQueryFnData, TError, TData, TQueryKey extends QueryKey>(
+function useRxQuery<
+	TQueryFnData,
+	TError,
+	TData = TQueryFnData,
+	TQueryKey extends QueryKey = QueryKey,
+>(
 	queryKey: TQueryKey,
 	queryFn$: Rx.Writable<Effect.Effect<TQueryFnData, TError, never>, string>,
 	options?: Partial<UseRxQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
-): UseQueryResult<TQueryFnData, TError> {
+): UseQueryResult<TData, TError> {
 	const queryFn = useRxValue(queryFn$)
 	return useQuery({
 		queryFn: () => Effect.runPromise(queryFn),
 		...options,
 		queryKey,
-	}) as any
+	})
 }
 
-type UseEffectMutation<T, E, V, C> = Exclude<
-	UseMutationOptions<T, E, V, C>,
+type UseEffectMutation<
+	TData = unknown,
+	TError = Error,
+	TVariables = void,
+	TContext = unknown,
+> = Exclude<
+	UseMutationOptions<TData, TError, TVariables, TContext>,
 	"mutationFn"
 > & {
-	mutationFn$: (vars: V) => Effect.Effect<T, E>
+	mutationFn$: (vars: TVariables) => Effect.Effect<TData, TError, TContext>
 }
 
-function useEffectMutation<T, E, V, C>(
-	mutationFn$: (vars: V) => Effect.Effect<T, E>,
-	options?: Partial<UseEffectMutation<T, E, V, C>>,
+function useEffectMutation<
+	TData = unknown,
+	TError = Error,
+	TVariables = void,
+	TContext = unknown,
+>(
+	mutationFn$: (vars: TVariables) => Effect.Effect<TData, TError>,
+	options?: Partial<UseEffectMutation<TData, TError, TVariables, TContext>>,
 ) {
 	return useMutation({
 		mutationFn: (v) => {
@@ -87,14 +102,20 @@ export default function App() {
 
 	const pokemonCaps = useRxValue(capsMon$)
 
-	const getPokemonName = useEffectMutation((name: string) =>
-		Effect.gen(function* () {
-			console.log("getting pokemon")
-			yield* Effect.sleep("1 second")
-			const pokemon = yield* getPokemon(name)
-			console.log("got pokemon")
-			return pokemon.name
-		}),
+	const getPokemonName = useEffectMutation(
+		(name: string) =>
+			Effect.gen(function* () {
+				console.log("getting pokemon")
+				yield* Effect.sleep("1 second")
+				const pokemon = yield* getPokemon(name)
+				console.log("got pokemon")
+				return pokemon.name
+			}),
+		{
+			onMutate: (vars) => {
+				return { name: "i" }
+			},
+		},
 	)
 
 	return (
