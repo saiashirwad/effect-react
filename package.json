@@ -1,0 +1,32 @@
+{
+	"name": "effect-react",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@effect-rx/rx-react": "^0.31.7",
+		"@effect/platform": "^0.72.0",
+		"@effect/platform-browser": "^0.51.0",
+		"@tanstack/react-query": "^5.62.10",
+		"effect": "^3.12.0",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@tailwindcss/vite": "^4.0.0-beta.8",
+		"@types/react": "^18.3.18",
+		"@types/react-dom": "^18.3.5",
+		"@vitejs/plugin-react": "^4.3.4",
+		"globals": "^15.14.0",
+		"tailwindcss": "^4.0.0-beta.8",
+		"typescript": "~5.6.2",
+		"typescript-eslint": "^8.18.2",
+		"vite": "^6.0.5"
+	}
+}
