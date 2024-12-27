@@ -1,4 +1,10 @@
-import { Rx, useRx, useRxValue } from "@effect-rx/rx-react"
+import {
+	Registry,
+	RegistryContext,
+	Rx,
+	useRx,
+	useRxValue,
+} from "@effect-rx/rx-react"
 import {
 	QueryKey,
 	UseMutationOptions,
@@ -27,6 +33,17 @@ const getPokemon = (name: string) =>
 	)
 
 const pokemonName$ = Rx.make("pikachu")
+
+const registry = Registry.make()
+registry.subscribe(pokemonName$, (name) => {
+	console.log("name changed", name)
+})
+
+const rip$ = Rx.fn(() =>
+	Effect.gen(function* () {
+		return 5
+	}),
+)
 
 const pokemonNameDebounced$ = pokemonName$.pipe(
 	Rx.debounce(Duration.seconds(1)),
@@ -95,31 +112,28 @@ function useEffectMutation<
 	})
 }
 
-export default function App() {
+function Playground() {
 	const [pokemonName, setPokemonName] = useRx(pokemonName$)
 	const nameDebounced = useRxValue(pokemonNameDebounced$)
 	const pokemon = useRxQuery(["pokemon", nameDebounced], pokemon$)
 
+	const rip = useRxValue(rip$)
+
 	const pokemonCaps = useRxValue(capsMon$)
 
-	const getPokemonName = useEffectMutation(
-		(name: string) =>
-			Effect.gen(function* () {
-				console.log("getting pokemon")
-				yield* Effect.sleep("1 second")
-				const pokemon = yield* getPokemon(name)
-				console.log("got pokemon")
-				return pokemon.name
-			}),
-		{
-			onMutate: (vars) => {
-				return { name: "i" }
-			},
-		},
+	const getPokemonName = useEffectMutation((name: string) =>
+		Effect.gen(function* () {
+			console.log("getting pokemon")
+			yield* Effect.sleep("1 second")
+			const pokemon = yield* getPokemon(name)
+			console.log("got pokemon")
+			return pokemon.name
+		}),
 	)
 
 	return (
 		<div className="container mx-auto p-4 font-mono">
+			<pre>{JSON.stringify(rip, null, 2)}</pre>
 			<div>
 				<pre>
 					{JSON.stringify({ pokemonName, nameDebounced, pokemonCaps }, null, 2)}
@@ -140,5 +154,13 @@ export default function App() {
 			<pre>{JSON.stringify(pokemon.data, null, 2)}</pre>
 			<pre>{JSON.stringify(pokemon.error, null, 2)}</pre>
 		</div>
+	)
+}
+
+export default function App() {
+	return (
+		<RegistryContext.Provider value={registry}>
+			<Playground />
+		</RegistryContext.Provider>
 	)
 }
