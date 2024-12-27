@@ -14,54 +14,6 @@ import {
 	useQuery,
 } from "@tanstack/react-query"
 import { Duration, Effect, Schema as S, pipe } from "effect"
-import React from "react"
-
-class Pokemon extends S.Class<Pokemon>("Pokemon")({
-	id: S.Number,
-	name: S.String,
-	sprites: S.Struct({
-		front_default: S.String,
-	}),
-	types: S.Array(S.Struct({ type: S.Struct({ name: S.String }) })),
-	abilities: S.Array(S.Struct({ ability: S.Struct({ name: S.String }) })),
-}) {}
-
-const getPokemon = (name: string) =>
-	pipe(
-		Effect.promise(() => fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)),
-		Effect.andThen((response) => response.json()),
-		Effect.andThen(S.decodeUnknown(Pokemon)),
-	)
-
-const pokemonName$ = Rx.make("pikachu")
-
-const registry = Registry.make()
-registry.subscribe(pokemonName$, (name) => {
-	console.log("name changed", name)
-})
-
-const rip$ = Rx.fn(() =>
-	Effect.gen(function* () {
-		return 5
-	}),
-)
-
-const pokemonNameDebounced$ = pokemonName$.pipe(
-	Rx.debounce(Duration.seconds(1)),
-)
-
-const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
-const nameAndAbilities$ = Rx.map(pokemon$, (pokemon) =>
-	Effect.gen(function* () {
-		const poke = yield* pokemon
-		return {
-			name: poke.name,
-			abilities: poke.abilities,
-		}
-	}),
-)
-
-const capsMon$ = Rx.map(pokemonName$, (pn) => pn.toUpperCase())
 
 type UseRxQueryOptions<
 	TQueryFnData,
@@ -118,6 +70,54 @@ function useEffectMutation<
 	})
 }
 
+class Pokemon extends S.Class<Pokemon>("Pokemon")({
+	id: S.Number,
+	name: S.String,
+	sprites: S.Struct({
+		front_default: S.String,
+	}),
+	types: S.Array(S.Struct({ type: S.Struct({ name: S.String }) })),
+	abilities: S.Array(S.Struct({ ability: S.Struct({ name: S.String }) })),
+}) {}
+
+const getPokemon = (name: string) =>
+	pipe(
+		Effect.promise(() => fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)),
+		Effect.andThen((response) => response.json()),
+		Effect.andThen(S.decodeUnknown(Pokemon)),
+	)
+
+const pokemonName$ = Rx.make("pikachu")
+
+const registry = Registry.make()
+registry.subscribe(pokemonName$, (name) => {
+	console.log("name changed", name)
+})
+
+const rip$ = Rx.fn(() =>
+	Effect.gen(function* () {
+		return 5
+	}),
+)
+
+const pokemonNameDebounced$ = pokemonName$.pipe(
+	Rx.debounce(Duration.seconds(1)),
+)
+
+const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
+const nameAndAbilities$ = Rx.map(pokemon$, (pokemon) =>
+	Effect.gen(function* () {
+		const poke = yield* pokemon
+		yield* Effect.sleep("1 second")
+		return {
+			name: poke.name,
+			abilities: poke.abilities,
+		}
+	}),
+)
+
+const capsMon$ = Rx.map(pokemonName$, (pn) => pn.toUpperCase())
+
 function Playground() {
 	const [pokemonName, setPokemonName] = useRx(pokemonName$)
 	const nameDebounced = useRxValue(pokemonNameDebounced$)
@@ -142,7 +142,7 @@ function Playground() {
 	)
 
 	return (
-		<div>
+		<div className="container mx-auto p-4 font-mono">
 			<pre>{JSON.stringify(rip, null, 2)}</pre>
 			<div>
 				<pre>
@@ -161,9 +161,9 @@ function Playground() {
 			>
 				get name
 			</button>
-			<pre>{JSON.stringify(pokemon.data, null, 2)}</pre>
+			<pre>{JSON.stringify(pokemon.data?.name, null, 2)}</pre>
 			<pre>{JSON.stringify(pokemon.error, null, 2)}</pre>
-			<pre>{JSON.stringify(nameAndAbilities.data, null, 2)}</pre>
+			<pre>{JSON.stringify(nameAndAbilities.data?.name, null, 2)}</pre>
 			<pre>{JSON.stringify(nameAndAbilities.error, null, 2)}</pre>
 		</div>
 	)
