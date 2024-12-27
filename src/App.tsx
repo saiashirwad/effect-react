@@ -53,9 +53,7 @@ function useEffectMutation<
 	>,
 ) {
 	return useMutation({
-		mutationFn: (v) => {
-			return Effect.runPromise(mutationFnEffect(v))
-		},
+		mutationFn: (v) => Effect.runPromise(mutationFnEffect(v)),
 		...options,
 	})
 }
@@ -80,6 +78,7 @@ const getPokemon = (name: string) =>
 const pokemonName$ = Rx.make("pikachu")
 
 const registry = Registry.make()
+
 registry.subscribe(pokemonName$, (name) => {
 	console.log("name changed", name)
 })
@@ -95,6 +94,7 @@ const pokemonNameDebounced$ = pokemonName$.pipe(
 )
 
 const pokemon$ = Rx.map(pokemonNameDebounced$, getPokemon)
+
 const nameAndAbilities$ = Rx.map(pokemon$, (pokemon) =>
 	Effect.gen(function* () {
 		const poke = yield* pokemon
@@ -123,10 +123,8 @@ function Playground() {
 
 	const getPokemonName = useEffectMutation((name: string) =>
 		Effect.gen(function* () {
-			console.log("getting pokemon")
 			yield* Effect.sleep("1 second")
 			const pokemon = yield* getPokemon(name)
-			console.log("got pokemon")
 			return pokemon.name
 		}),
 	)
